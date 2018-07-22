@@ -1,5 +1,9 @@
 #!/bin/bash
 
+##PREPARE
+listcommand="tree"
+which tree &>/dev/null || listcommand="ls"
+
 function showhelp () {
     echo '
 CONFIGRA - HELP
@@ -11,10 +15,10 @@ install [SETNAME]            - executes the install-script of the set "SETNAME"
 }
 
 function add () { # $2 setname $3 filename
-    if [[ "$2" == "" ]]; then
+    if [[ "$2" = "" ]]; then
         exit
     fi
-    if [[ "$3" == "" ]]; then
+    if [[ "$3" = "" ]]; then
         exit
     fi
     if [[ ! -e "$3" ]]; then
@@ -24,13 +28,13 @@ function add () { # $2 setname $3 filename
     mkdir -p ~/CONFIGRA/$2 || echo ""
     
     cleanfilename=$(echo $3 | grep -Poh --color=never "\w(\w|[.-])+$")
-    cp $3 ~/CONFIGRA/$2/$cleanfilename
+    cp -p $3 ~/CONFIGRA/$2/$cleanfilename
     rm $3
     ln -s -r ~/CONFIGRA/$2/$cleanfilename $3
     
     touch ~/CONFIGRA/$2/configrainstall.sh
     installcontent=$(more ~/CONFIGRA/$2/configrainstall.sh)
-    if [[ "$installcontent" == "" ]]; then
+    if [[ "$installcontent" = "" ]]; then
         echo '#!/bin/bash
 #
 # This script will be executed, everytime you do "configra install"
@@ -42,15 +46,14 @@ function add () { # $2 setname $3 filename
 
     linkpath=""
     me=$(whoami)
-    fullpath=$(pwd | grep -Poh --color=never "(/home/$me)")
+    fullpath=$(echo $PWD | grep -Poh --color=never "($HOME)")
     if [[ "$fullpath" != "" ]]; then
-        fullpath=~$(pwd | grep -Poh --color=never "(?<=(/home/$me))(/(\w|\d|[.-_])+)*")
-        linkpath=~$(pwd | grep -Poh --color=never "(?<=(/home/$me))(/(\w|\d|[.-_])+)*")/$3
+        fullpath=~$(echo $PWD | grep -Poh --color=never "(?<=($HOME))(/(\w|\d|[.-_])+)*")
     fi
-    if [[ "$fullpath" == "" ]]; then
-        fullpath=$(pwd)
-        linkpath="$(pwd)/$3"
+    if [[ "$fullpath" = "" ]]; then
+        fullpath=$PWD
     fi
+    linkpath=$fullpath/$3
     
     echo "mkdir -p $fullpath" >> ~/CONFIGRA/$2/configrainstall.sh
     
@@ -64,7 +67,7 @@ function installf () {
 }
 
 function list () {
-    tree ~/CONFIGRA
+    $listcommand ~/CONFIGRA
 }
 
 case $1 in
