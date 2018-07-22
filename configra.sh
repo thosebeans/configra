@@ -62,7 +62,11 @@ function add () { # $2 setname $3 filename
 }
 
 function installf () {
-    test -e ~/CONFIGRA/$2 || exit
+    if [[ ! -e ~/CONFIGRA/$2 ]]; then
+        echo 'set "'$2'" not found'
+        list
+        exit
+    fi
     bash ~/CONFIGRA/$2/configrainstall.sh
 }
 
