@@ -1,8 +1,6 @@
 #!/bin/bash
 
 ##PREPARE
-listcommand="tree"
-which tree &>/dev/null || listcommand="ls"
 
 function showhelp () {
     echo '
@@ -71,7 +69,20 @@ function installf () {
 }
 
 function list () {
-    $listcommand ~/CONFIGRA
+    sets=$(ls --color=never ~/CONFIGRA/)
+    for i in $sets ; do
+        echo $i
+        setcontent=$(ls --color=never ~/CONFIGRA/$i)
+        for j in $setcontent ; do
+            if [[ "$j" != "configrainstall.sh" ]]; then
+                echo "-- $j"
+            fi
+            if [[ "$j" = "configrainstall.sh" ]]; then
+                echo "--** $j"
+            fi
+        done
+        echo ""
+    done
 }
 
 case $1 in
