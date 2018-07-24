@@ -1,9 +1,5 @@
 #!/bin/bash
 
-##PREPARE
-missingdeps=""
-which basename &>/dev/null || 
-
 function showhelp () {
     echo '
 CONFIGRA - HELP
