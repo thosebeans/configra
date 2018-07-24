@@ -1,5 +1,20 @@
 #!/bin/bash
 
+#PREPARE
+deps="git grep"
+missingdeps=""
+
+for d in $deps; do
+    which $d &>/dev/null || missingdeps="$d $missingdeps"
+done
+
+if [[ "$missingdeps" != "" ]]; then
+    echo "missing dependencies:"
+    echo "$missingdeps"
+    exit
+fi
+
+
 function showhelp () {
     echo '
 CONFIGRA - HELP
@@ -7,6 +22,8 @@ CONFIGRA - HELP
 add     [SETNAME] [FILENAME] - adds a file to the set "SETNAME" of your configra-collection
 list    [SETNAME]            - list all your sets and their files
 install [SETNAME]            - executes the install-script of the set "SETNAME"
+init                         - initialises your "CONFIGRA"-Directory as a git-repository
+sync                         - synchronizes the remote-repository with your local copy
     '
 }
 
@@ -36,7 +53,6 @@ function add () { # $2 setname $3 filename
     if [[ "$homepath" != "" ]]; then
         linkpath="~$homepath"
     fi
-    echo $linkpath
     
     cleanfilename=$(basename $3 | grep -Poh --color=never "([^.])(\w|\d|\W|\D)+")
     origname=$(basename $3)
@@ -86,6 +102,21 @@ function list () {
     done
 }
 
+function initf () {
+    mkdir -p ~/CONFIGRA
+    git init ~/CONFIGRA/
+}
+
+function syncf () {
+    cd ~/CONFIGRA/
+    git fetch
+    git pull
+    hash=$(date | md5sum | grep -Poh --color=never "(\d|[a-z]){16}")
+    git add -A
+    git commit -m "$hash"
+    git push
+}
+
 case $1 in
     "add")
         add $*
@@ -101,6 +132,12 @@ case $1 in
     ;;
     "-h")
         showhelp
+    ;;
+    "init")
+        initf
+    ;;
+    "sync")
+        syncf
     ;;
     *)
         showhelp
