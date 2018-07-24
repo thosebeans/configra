@@ -1,6 +1,8 @@
 #!/bin/bash
 
 ##PREPARE
+missingdeps=""
+which basename &>/dev/null || 
 
 function showhelp () {
     echo '
@@ -14,49 +16,52 @@ install [SETNAME]            - executes the install-script of the set "SETNAME"
 
 function add () { # $2 setname $3 filename
     if [[ "$2" = "" ]]; then
+        echo "Please input a set to use"
         exit
     fi
     if [[ "$3" = "" ]]; then
+        echo "Please input a File to add"
         exit
     fi
     if [[ ! -e "$3" ]]; then
+        echo 'File "'$3'" doesent exist'
+        exit
+    fi
+    if [[ -d "$3" ]]; then
+        echo 'File "'$3'" is a directory'
         exit
     fi
     
-    mkdir -p ~/CONFIGRA/$2 || echo ""
+    mkdir -p ~/CONFIGRA/$2
     
-    cleanfilename=$(echo $3 | grep -Poh --color=never "\w(\w|[.-])+$")
-    cp -p $3 ~/CONFIGRA/$2/$cleanfilename
-    rm $3
-    ln -s -r ~/CONFIGRA/$2/$cleanfilename $3
+    absolutepath=$(readlink -f $3)
+    homepath=$(echo $absolutepath | grep -Poh --color=never "(?<=($HOME))(\w|\W|\d|\D\s\S)+")
+    linkpath=$absolutepath
+    if [[ "$homepath" != "" ]]; then
+        linkpath="~$homepath"
+    fi
+    echo $linkpath
     
-    touch ~/CONFIGRA/$2/configrainstall.sh
-    installcontent=$(more ~/CONFIGRA/$2/configrainstall.sh)
-    if [[ "$installcontent" = "" ]]; then
+    cleanfilename=$(basename $3 | grep -Poh --color=never "([^.])(\w|\d|\W|\D)+")
+    origname=$(basename $3)
+    
+    linkdir=${linkpath%/*}
+    
+    if [[ ! -e ~/CONFIGRA/$2/configrainstall.sh ]]; then
         echo '#!/bin/bash
 #
-# This script will be executed, everytime you do "configra install"
-# Its a normal bash-script, so feel free to modify it
+#This script will be executed every time, you do "configra install".
+#Since its a normal bash-script, feel free to modify it.
+#
 #' > ~/CONFIGRA/$2/configrainstall.sh
     fi
     
-    echo "# $cleanfilename" >> ~/CONFIGRA/$2/configrainstall.sh
-
-    linkpath=""
-    me=$(whoami)
-    fullpath=$(echo $PWD | grep -Poh --color=never "($HOME)")
-    if [[ "$fullpath" != "" ]]; then
-        fullpath=~$(echo $PWD | grep -Poh --color=never "(?<=($HOME))(/(\w|\d|[.-_])+)*")
-    fi
-    if [[ "$fullpath" = "" ]]; then
-        fullpath=$PWD
-    fi
-    linkpath=$fullpath/$3
-    
-    echo "mkdir -p $fullpath" >> ~/CONFIGRA/$2/configrainstall.sh
-    
-    echo 'ln -s -r -f ~/CONFIGRA/'"$2/$cleanfilename $linkpath" >> ~/CONFIGRA/$2/configrainstall.sh
+    echo "mkdir -p $linkdir" >> ~/CONFIGRA/$2/configrainstall.sh
+    echo "ln -s -r -f ~/CONFIGRA/$2/$cleanfilename $linkdir/$origname" >> ~/CONFIGRA/$2/configrainstall.sh
     echo "#" >> ~/CONFIGRA/$2/configrainstall.sh
+    
+    cp -p $3 ~/CONFIGRA/$2/$cleanfilename
+    ln -s -r -f ~/CONFIGRA/$2/$cleanfilename $3
 }
 
 function installf () {
