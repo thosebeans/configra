@@ -20,7 +20,7 @@ function showhelp () {
 CONFIGRA - HELP
 
 add     [SETNAME] [FILENAME] - adds a file to the set "SETNAME" of your configra-collection
-list    [SETNAME]            - list all your sets and their files
+list                         - list all your sets and their files
 install [SETNAME]            - executes the install-script of the set "SETNAME"
 init                         - initialises your "CONFIGRA"-Directory as a git-repository
 sync                         - synchronizes the remote-repository with your local copy
