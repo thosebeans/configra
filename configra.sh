@@ -55,6 +55,7 @@ function add () { # $2 setname $3 filename
     fi
     
     cleanfilename=$(basename $3 | grep -Poh --color=never "([^.])(\w|\d|\W|\D)+")
+    cleanfilename=$cleanfilename$RANDOM
     origname=$(basename $3)
     
     linkdir=${linkpath%/*}
