@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #PREPARE
-deps="git grep"
+deps="sha256sum base64"
 missingdeps=""
 
 for d in $deps; do
@@ -47,43 +47,69 @@ function add () { # $2 setname $3 filename
     
     mkdir -p ~/CONFIGRA/$2
     
-    absolutepath=$(readlink -f $3)
-    homepath=$(echo $absolutepath | grep -Poh --color=never "(?<=($HOME))(\w|\W|\d|\D\s\S)+")
-    linkpath=$absolutepath
-    if [[ "$homepath" != "" ]]; then
-        linkpath="~$homepath"
-    fi
+    cleanname=$(basename $3)
+    cleanname=${cleanname#.}
     
-    cleanfilename=$(basename $3 | grep -Poh --color=never "([^.])(\w|\d|\W|\D)+")
-    cleanfilename=$cleanfilename$RANDOM
-    origname=$(basename $3)
+    echo $cleanname
     
-    linkdir=${linkpath%/*}
+    rand=$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM
+    rand=$(echo $rand | sha256sum | base64)
+    rand=${rand//[[:digit:]]/""}
+    rand=${rand:0:5}
     
-    if [[ ! -e ~/CONFIGRA/$2/configrainstall.sh ]]; then
-        echo '#!/bin/bash
+    echo $rand
+    
+    mkdir -p ~/CONFIGRA/$2/$cleanname-$rand
+    echo '#!/bin/bash
 #
-#This script will be executed every time, you do "configra install".
-#Since its a normal bash-script, feel free to modify it.
-#
-#' > ~/CONFIGRA/$2/configrainstall.sh
+#this is the install-script of ' $cleanname '
+#its a normal bash-script, so feel free to modify it
+#' > ~/CONFIGRA/$2/$cleanname-$rand/configrainstall.sh
+    chmod +x ~/CONFIGRA/$2/$cleanname-$rand/configrainstall.sh
+    
+    fullpath=$(readlink -f $3)
+    linkpath=$fullpath
+    
+    if [[ $fullpath = *$HOME* ]]; then
+        linkpath=${fullpath#"$HOME"}
+        linkpath="~$linkpath"
     fi
+    echo $linkpath
     
-    echo "mkdir -p $linkdir" >> ~/CONFIGRA/$2/configrainstall.sh
-    echo "ln -s -r -f ~/CONFIGRA/$2/$cleanfilename $linkdir/$origname" >> ~/CONFIGRA/$2/configrainstall.sh
-    echo "#" >> ~/CONFIGRA/$2/configrainstall.sh
+    cp -p $3 ~/CONFIGRA/$2/$cleanname-$rand/$cleanname
     
-    cp -p $3 ~/CONFIGRA/$2/$cleanfilename
-    ln -s -r -f ~/CONFIGRA/$2/$cleanfilename $3
+    filedir=$(dirname $3)
+    filedir=$(readlink -f $filedir)
+    if [[ $filedir = *$HOME* ]]; then
+        filedir=${filedir#"$HOME"}
+        filedir="~$filedir"
+    fi
+    echo $filedir
+    
+    echo "mkdir -p $filedir" >> ~/CONFIGRA/$2/$cleanname-$rand/configrainstall.sh
+    echo "ln -srf $cleanname $linkpath" >> ~/CONFIGRA/$2/$cleanname-$rand/configrainstall.sh
+    echo "#" >> ~/CONFIGRA/$2/$cleanname-$rand/configrainstall.sh
+    
+    ln -srf ~/CONFIGRA/$2/$cleanname-$rand/$cleanname $3
 }
 
-function installf () {
-    if [[ ! -e ~/CONFIGRA/$2 ]]; then
-        echo 'set "'$2'" not found'
-        list
+function installf () { #$2 set
+    if [[ ! -d ~/CONFIGRA/$2 ]]; then
+        echo "$2 isnt a set"
+        echo ""
         exit
     fi
-    bash ~/CONFIGRA/$2/configrainstall.sh
+    
+    cd ~/CONFIGRA/$2
+    
+    files=$(ls --color=never)
+    echo $files
+    echo ""
+    
+    for i in $files; do
+        echo $i
+        $(cd $i && ./configrainstall.sh)
+    done
 }
 
 function list () {
@@ -92,12 +118,7 @@ function list () {
         echo $i
         setcontent=$(ls --color=never ~/CONFIGRA/$i)
         for j in $setcontent ; do
-            if [[ "$j" != "configrainstall.sh" ]]; then
-                echo "-- $j"
-            fi
-            if [[ "$j" = "configrainstall.sh" ]]; then
-                echo "--** $j"
-            fi
+            echo "-- $j"
         done
         echo ""
     done
@@ -112,7 +133,8 @@ function syncf () {
     cd ~/CONFIGRA/
     git fetch
     git pull
-    hash=$(date | md5sum | grep -Poh --color=never "(\d|[a-z]){16}")
+    hash=$(date | sha256sum)
+    hash=${hash:0:16}
     git add -A
     git commit -m "$hash"
     git push
