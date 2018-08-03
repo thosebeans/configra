@@ -50,22 +50,18 @@ function add () { # $2 setname $3 filename
     cleanname=$(basename $3)
     cleanname=${cleanname#.}
     
-    echo $cleanname
-    
     rand=$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM
     rand=$(echo $rand | sha256sum | base64)
     rand=${rand//[[:digit:]]/""}
     rand=${rand:0:5}
     
-    echo $rand
-    
-    mkdir -p ~/CONFIGRA/$2/$cleanname-$rand
+    mkdir -p ~/CONFIGRA/$2/$rand-$cleanname
     echo '#!/bin/bash
 #
 #this is the install-script of ' $cleanname '
 #its a normal bash-script, so feel free to modify it
-#' > ~/CONFIGRA/$2/$cleanname-$rand/configrainstall.sh
-    chmod +x ~/CONFIGRA/$2/$cleanname-$rand/configrainstall.sh
+#' > ~/CONFIGRA/$2/$rand-$cleanname/configrainstall.sh
+    chmod +x ~/CONFIGRA/$2/$rand-$cleanname/configrainstall.sh
     
     fullpath=$(readlink -f $3)
     linkpath=$fullpath
@@ -74,9 +70,8 @@ function add () { # $2 setname $3 filename
         linkpath=${fullpath#"$HOME"}
         linkpath="~$linkpath"
     fi
-    echo $linkpath
     
-    cp -p $3 ~/CONFIGRA/$2/$cleanname-$rand/$cleanname
+    cp -p $3 ~/CONFIGRA/$2/$rand-$cleanname/$cleanname
     
     filedir=$(dirname $3)
     filedir=$(readlink -f $filedir)
@@ -84,13 +79,12 @@ function add () { # $2 setname $3 filename
         filedir=${filedir#"$HOME"}
         filedir="~$filedir"
     fi
-    echo $filedir
     
-    echo "mkdir -p $filedir" >> ~/CONFIGRA/$2/$cleanname-$rand/configrainstall.sh
-    echo "ln -srf $cleanname $linkpath" >> ~/CONFIGRA/$2/$cleanname-$rand/configrainstall.sh
-    echo "#" >> ~/CONFIGRA/$2/$cleanname-$rand/configrainstall.sh
+    echo "mkdir -p $filedir" >> ~/CONFIGRA/$2/$rand-$cleanname/configrainstall.sh
+    echo "ln -srf $cleanname $linkpath" >> ~/CONFIGRA/$2/$rand-$cleanname/configrainstall.sh
+    echo "#" >> ~/CONFIGRA/$2/$rand-$cleanname/configrainstall.sh
     
-    ln -srf ~/CONFIGRA/$2/$cleanname-$rand/$cleanname $3
+    ln -srf ~/CONFIGRA/$2/$rand-$cleanname/$cleanname $3
 }
 
 function installf () { #$2 set
