@@ -97,11 +97,8 @@ function installf () { #$2 set
     cd ~/CONFIGRA/$2
     
     files=$(ls --color=never)
-    echo $files
-    echo ""
     
     for i in $files; do
-        echo $i
         $(cd $i && ./configrainstall.sh)
     done
 }
