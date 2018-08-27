@@ -1,6 +1,6 @@
 # configra
 
-Tool for managing your dotfiles, entirely written in bash.
+Tool for managing your dotfiles, written in bash.
 
 ## Installation
 
