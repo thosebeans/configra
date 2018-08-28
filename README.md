@@ -22,4 +22,4 @@ Every set contains, at least, one folder which contains a `configrainstall.sh`.
 Using `configra install SET`, configra will `cd` into all the subdirectorys of `SET` and execute the `configra.sh`-scripts **from there** .
 
 **IMPORTANT**  
-By default, `configra.sh` will be a bash-script, but any executable-file can be used, as long as your system can fullfill the dependencies.
+By default, `configrainstall.sh` will be a bash-script, but any executable-file can be used, as long as your system can fullfill the dependencies.
